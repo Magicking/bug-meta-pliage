@@ -64,7 +64,7 @@ func configureAPI(api *operations.DAOTAPI) http.Handler {
 	api.JSONProducer = runtime.JSONProducer()
 
 	api.AssociationHandler = operations.AssociationHandlerFunc(func(params operations.AssociationParams) middleware.Responder {
-		return middleware.NotImplemented("operation .Association has not yet been implemented")
+		return operations.NewAssociationOK().WithPayload(true)
 	})
 	api.HistoriqueHandler = operations.HistoriqueHandlerFunc(func(params operations.HistoriqueParams) middleware.Responder {
 		return middleware.NotImplemented("operation .Historique has not yet been implemented")
