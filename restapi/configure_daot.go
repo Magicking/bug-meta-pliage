@@ -5,6 +5,7 @@ package restapi
 import (
 	"context"
 	"crypto/tls"
+	"math/big"
 	"net/http"
 
 	errors "github.com/go-openapi/errors"
@@ -22,9 +23,10 @@ import (
 //go:generate swagger generate server --target .. --name  --spec ../docs/dao_tracabilite.yml
 
 var ethopts struct {
-	WsURI      string `long:"ws-uri" env:"WS_URI" description:"Ethereum WS URI (e.g: ws://HOST:8546)"`
-	Retry      int    `long:"retry" env:"RETRY" default:"3" description:"Max connection retry"`
-	PrivateKey string `long:"pkey" env:"PRIVATE_KEY" description:"hex encoded private key"`
+	WsURI        string `long:"ws-uri" env:"WS_URI" description:"Ethereum WS URI (e.g: ws://HOST:8546)"`
+	Retry        int    `long:"retry" env:"RETRY" default:"3" description:"Max connection retry"`
+	PrivateKey   string `long:"pkey" env:"PRIVATE_KEY" description:"hex encoded private key"`
+	ContractAddr string `long:"addr" env:"ADDR_CONTRACT" description:"Contract Addr"`
 }
 
 var serviceopts struct {
@@ -56,8 +58,9 @@ func configureAPI(api *operations.DAOTAPI) http.Handler {
 	// api.Logger = log.Printf
 
 	ctx := internal.InitContext(context.Background())
-	internal.NewDBToContext(ctx, serviceopts.DbDSN)
+	//	internal.NewDBToContext(ctx, serviceopts.DbDSN)
 	internal.NewCCToContext(ctx, ethopts.WsURI, ethopts.Retry)
+	internal.Init(ctx, ethopts.ContractAddr, ethopts.PrivateKey)
 
 	api.JSONConsumer = runtime.JSONConsumer()
 
@@ -67,7 +70,27 @@ func configureAPI(api *operations.DAOTAPI) http.Handler {
 		return operations.NewAssociationOK().WithPayload(true)
 	})
 	api.HistoriqueHandler = operations.HistoriqueHandlerFunc(func(params operations.HistoriqueParams) middleware.Responder {
-		return middleware.NotImplemented("operation .Historique has not yet been implemented")
+		iID, err := internal.DAO.ToInternalId(params.Objetid)
+		if err != nil {
+			return middleware.NotImplemented("error: " + err.Error())
+		}
+		obj, err := internal.DAO.Objects(iID)
+		if err != nil {
+			return middleware.NotImplemented("error: " + err.Error())
+		}
+		var ret []string
+		for i := int64(0); i < obj.TraceCount.Int64(); i++ {
+			traceHash, err := internal.DAO.GetHistoryHash(params.Objetid, big.NewInt(i))
+			if err != nil {
+				return middleware.NotImplemented("error: " + err.Error())
+			}
+			trace, err := internal.DAO.Traces(traceHash)
+			if err != nil {
+				return middleware.NotImplemented("error: " + err.Error())
+			}
+			ret = append(ret, trace.Metadata)
+		}
+		return operations.NewHistoriqueOK().WithPayload(ret)
 	})
 	api.QrcodeHandler = operations.QrcodeHandlerFunc(func(params operations.QrcodeParams) middleware.Responder {
 		return middleware.NotImplemented("operation .Qrcode has not yet been implemented")

@@ -1,18 +1,28 @@
 package internal
 
 import (
+	"context"
+	"crypto/ecdsa"
+	"log"
+	"strings"
+
+	ethtk "github.com/Magicking/gethitihteg"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 var contractKey key = 4242
+var _key *ecdsa.PrivateKey
 var contractAddr common.Address
+var DAO *DAOTracabiliteSession
 
-/*
-TODO(6120)
 func InitContract(ctx context.Context, auth *bind.TransactOpts) (common.Address, interface{}) {
-	rawContract := common.FromHex(TicTacToeBin)
+	rawContract := common.FromHex(DAOTracabiliteBin)
 	client := CCFromContext(ctx)
-	contractABI, err := abi.JSON(strings.NewReader(TicTacToeABI))
+	contractABI, err := abi.JSON(strings.NewReader(DAOTracabiliteBin))
 	addr, tx, c, err := ethtk.DeployContract(auth, contractABI, rawContract, client)
 	if err != nil {
 		log.Fatalf("InitContract: %v", err)
@@ -23,10 +33,6 @@ func InitContract(ctx context.Context, auth *bind.TransactOpts) (common.Address,
 
 func Init(ctx context.Context, contract_address, private_key string) {
 	nc := CCFromContext(ctx)
-	evt_mgr, err := NewEventManager(TicTacToeABI)
-	if err != nil {
-		log.Fatalf("Could not create event manager")
-	}
 	key, err := crypto.HexToECDSA(private_key)
 	if err != nil {
 		log.Fatalf("Init: %v", err)
@@ -37,16 +43,14 @@ func Init(ctx context.Context, contract_address, private_key string) {
 	if contract_address == "" {
 		ctct_addr, _ = InitContract(ctx, auth)
 	}
-	ctct, err := NewTicTacToe(ctct_addr, nc)
+	ctct, err := NewDAOTracabilite(ctct_addr, nc)
 	if err != nil {
 		log.Fatalf("Init: %v", err)
 	}
 	setContextValue(ctx, contractKey, ctct)
 	contractAddr = ctct_addr
-	err = DeleteAllStates(ctx)
-	if err != nil {
-		log.Fatalf("Init: %v", err)
+	DAO = &DAOTracabiliteSession{Contract: ctct,
+		CallOpts:     bind.CallOpts{Pending: true},
+		TransactOpts: *auth,
 	}
-	nc.SubscribeToEvents(ctx, ctct_addr, evt_mgr)
 }
-*/
