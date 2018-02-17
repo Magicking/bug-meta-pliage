@@ -12,14 +12,14 @@ import (
 
 type QRCode struct {
 	gorm.Model
-	ID       string
-	Metadata string
+	BlockchainID string
+	Metadata     string
 }
 
 func InsertState(ctx context.Context, metadata string) (string, error) {
 	db := DBFromContext(ctx)
 
-	qr := &QRCode{ID: "TODO", Metadata: metadata}
+	qr := &QRCode{BlockchainIDID: "TODO", Metadata: metadata}
 	if err := db.Create(qr).Error; err != nil {
 		return "", err
 	}
