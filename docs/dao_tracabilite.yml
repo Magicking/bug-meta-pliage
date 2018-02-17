@@ -4,8 +4,6 @@ info:
   description: |
     DAOT API
   version: "0.1.0"
-schemes:
-  - "https"
 host: "bmp.6120.eu"
 basePath: "/api"
 produces:
