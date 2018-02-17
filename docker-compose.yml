@@ -1,0 +1,17 @@
+version: '2'
+services:
+  daot:
+    build: .
+    environment:
+      - WS_URI=wss://bmp.6120.eu/ws
+      - DB_DSN=host=postgres user=f3b1be969686afb4520ce dbname=daot sslmode=disable password=839169c0ea5e59146a
+      - PRIVATE_KEY=1cc841ae05b83f1746d77efc3fc2e868605ebf5d772eba5be74eb7c56bf14ec7
+    links:
+      - postgres
+
+  postgres:
+    image: postgres:9.5
+    environment:
+      - POSTGRES_USER=f3b1be969686afb4520ce
+      - POSTGRES_PASSWORD=839169c0ea5e59146a
+      - POSTGRES_DB=daot
