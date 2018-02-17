@@ -14,6 +14,9 @@ contract DAOTracabilite {
 	enum Actions { Create, Pack, TransferFrom, TransferTo }
 	enum ObjectKind { QRCode, Unit, Container }
 
+	event ObjectNotification(ObjectKind kind, string metadata);
+	event ActionNotification(Actions action, string from, string metadata);
+
 	// Basic object
 	struct Object {
 		uint       Date;
@@ -45,6 +48,7 @@ contract DAOTracabilite {
 		Objects[id].Kind = kind;
 		Objects[id].Metadata = metadata;
 		Objects[id].TraceCount = 0;
+		ObjectNotification(kind, metadata);
 	}
 
 	function AddQRCode(string guid, string metadata) public returns (bool) {
@@ -83,6 +87,7 @@ contract DAOTracabilite {
 
 		bytes32 idx = GetHistoryHash(fromStr, Objects[from].TraceCount);
 		Traces[idx] = pts;
+		ActionNotification(kind, fromStr, metadata);
 	}
 
 	// Call GetHistoryHash
