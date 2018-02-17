@@ -7,7 +7,7 @@ DAOT API
 
 
     Schemes:
-      http
+      https
     Host: bmp.6120.eu
     BasePath: /api
     Version: 0.1.0

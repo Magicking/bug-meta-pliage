@@ -20,6 +20,9 @@ func init() {
   "produces": [
     "application/json"
   ],
+  "schemes": [
+    "https"
+  ],
   "swagger": "2.0",
   "info": {
     "description": "DAOT API\n",
