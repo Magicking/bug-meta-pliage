@@ -1,0 +1,91 @@
+swagger: '2.0'
+info:
+  title: DAOT
+  description: |
+    DAOT API
+  version: "0.1.0"
+host: "bmp.6120.eu"
+basePath: "/api"
+produces:
+  - application/json
+consumes:
+  - application/json
+paths:
+  /historique/{objetid}:
+    get:
+      summary: Historiques metadata objet
+      operationId: historique
+      description: Retournes les informations d'historique
+      responses:
+        200:
+          description: Liste ordonnée des interactions
+          schema:
+            type: array
+            items:
+              type: string
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      parameters:
+        - name: objetid
+          in: path
+          type: string
+          required: true
+  /association/{c_id}:
+    post:
+      summary: Met des objets dans un objet
+      operationId: association
+      description: Met des objets unitaire dans objets conteneurs
+      responses:
+        200:
+          description: Indique si lassociation s'est réalisé
+          schema:
+            type: boolean
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      parameters:
+        - name: c_id
+          in: path
+          description: Identifiant du conteneur
+          type: string
+          required: true
+        - name: u_id_s
+          in: body
+          description: Identifiants des contenus
+          schema:
+            type: array
+            items:
+              type: string
+          required: true
+  /qrcode:
+    post:
+      summary: Créé un QRcode
+      operationId: qrcode
+      description: Créé un QRcode avec les metadata associés
+      responses:
+        200:
+          description: QRcode identifiant interne
+          schema:
+            type: string
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+definitions:
+  Error:
+    type: object
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
