@@ -19,7 +19,7 @@ type QRCode struct {
 func InsertState(ctx context.Context, metadata string) (string, error) {
 	db := DBFromContext(ctx)
 
-	qr := &QRCode{BlockchainIDID: "TODO", Metadata: metadata}
+	qr := &QRCode{BlockchainID: "TODO", Metadata: metadata}
 	if err := db.Create(qr).Error; err != nil {
 		return "", err
 	}
