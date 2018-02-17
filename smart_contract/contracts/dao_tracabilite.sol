@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.20;
 
 contract DAOTracabilite {
 
@@ -8,8 +8,10 @@ contract DAOTracabilite {
 	mapping (bytes32 => string) public Indexes;
 	// Mapping 1-to-1 hash(id) <=> id in string format
 	mapping (bytes32 => Point) public ContainerList;
+	// Mapping 1-to-1 hash(id+idx) => Point
+	mapping (bytes32 => Point) public Traces;
 
-	enum Actions { Pack, Unpack, Transfer }
+	enum Actions { Create, Pack, TransferFrom, TransferTo }
 	enum ObjectKind { QRCode, Unit, Container }
 
 	// Basic object
@@ -17,6 +19,7 @@ contract DAOTracabilite {
 		uint       Date;
 		ObjectKind Kind;
 		string     Metadata;
+		uint       TraceCount;
 	}
 
 	// Historical traces of units or container
@@ -41,8 +44,10 @@ contract DAOTracabilite {
 		Objects[id].Date = now;
 		Objects[id].Kind = kind;
 		Objects[id].Metadata = metadata;
+		Objects[id].TraceCount = 0;
 	}
-	function AddQRCode(string guid, string metadata) public returns (bool){
+
+	function AddQRCode(string guid, string metadata) public returns (bool) {
 		return addInternal(guid, metadata, ObjectKind.QRCode);
 	}
 
@@ -50,7 +55,7 @@ contract DAOTracabilite {
 		return addInternal(guid, metadata, ObjectKind.Unit);
 	}
 
-	function AddContainer(string guid, string metadata) public returns (bool){
+	function AddContainer(string guid, string metadata) public returns (bool) {
 		return addInternal(guid, metadata, ObjectKind.Container);
 	}
 
@@ -62,25 +67,46 @@ contract DAOTracabilite {
 		ContainerList[fromID].Date = now;
 		ContainerList[fromID].Kind = Actions.Pack;
 		ContainerList[fromID].Metadata = metadata;
+		AddTrace(guidFrom, fromID, toID, Actions.TransferFrom, metadata);
+		AddTrace(guidTo, fromID, toID, Actions.TransferTo, metadata);
+		Objects[fromID].TraceCount++;
 		return true;
 	}
 
-	function GetHistory(string guid) public view returns (bool) {
-		Point[] memory pts = new Point[](2);
+	function AddTrace(string fromStr, bytes32 from, bytes32 to, Actions kind, string metadata) internal {
+		Point memory pts;
+		pts.From = from;
+		pts.To = to;
+		pts.Date = now;
+		pts.Kind = kind;
+		pts.Metadata = metadata;
 
-		bytes32 id = toInternalId(guid);
-		pts[0].From = id;
-		pts[0].To = id;
-		pts[0].Date = now;
-		pts[0].Kind = Actions.Transfer;
-		pts[0].Metadata = "";
-		pts[1].From = id;
-		pts[1].To = id;
-		pts[1].Date = now;
-		pts[1].Kind = Actions.Transfer;
-		pts[1].Metadata = "";
-		return true;
+		bytes32 idx = GetHistoryHash(fromStr, Objects[from].TraceCount);
+		Traces[idx] = pts;
 	}
+
+	// Call GetHistoryHash
+	function GetHistoryHash(string guid, uint index) public pure returns (bytes32 traceHash) {
+		uint maxlength = 100;
+		bytes memory reversed = new bytes(maxlength);
+		uint i = 0;
+		while (index != 0) {
+			uint remainder = index % 10;
+			index = index / 10;
+			reversed[i++] = byte(48 + remainder);
+		}
+		bytes memory guidb = bytes(guid);
+		bytes memory s = new bytes(guidb.length + i);
+		uint j;
+		for (j = 0; j < guidb.length; j++) {
+			s[j] = guidb[j];
+		}
+		for (j = 0; j < i; j++) {
+			s[j + guidb.length] = reversed[i - 1 - j];
+		}
+		return keccak256(string(s));
+	}
+
 	/*
 	function TransferContainer(string guid, string fromID, string toID, string metadata) public returns (bool) {
 		return true;
