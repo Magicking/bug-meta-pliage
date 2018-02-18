@@ -50,7 +50,7 @@ func Init(ctx context.Context, contract_address, private_key string) {
 	setContextValue(ctx, contractKey, ctct)
 	contractAddr = ctct_addr
 	DAO = &DAOTracabiliteSession{Contract: ctct,
-		CallOpts:     bind.CallOpts{Pending: true},
+		CallOpts:     bind.CallOpts{},
 		TransactOpts: *auth,
 	}
 }

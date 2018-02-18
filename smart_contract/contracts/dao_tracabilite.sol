@@ -95,6 +95,7 @@ contract DAOTracabilite {
 		uint maxlength = 100;
 		bytes memory reversed = new bytes(maxlength);
 		uint i = 0;
+		index++;
 		while (index != 0) {
 			uint remainder = index % 10;
 			index = index / 10;
