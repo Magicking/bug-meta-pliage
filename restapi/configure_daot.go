@@ -5,6 +5,7 @@ package restapi
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"log"
 	"math/big"
 	"net/http"
@@ -71,7 +72,11 @@ func configureAPI(api *operations.DAOTAPI) http.Handler {
 	api.AssociationHandler = operations.AssociationHandlerFunc(func(params operations.AssociationParams) middleware.Responder {
 		go func() {
 			for _, id := range params.UIDS {
-				tx, err := internal.DAO.AddObjectToContainer(params.CID, id, "{\"info\":\"Scanned\"}")
+				t := time.Now()
+				d := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d-00:00\n",
+					t.Year(), t.Month(), t.Day(),
+					t.Hour(), t.Minute(), t.Second())
+				tx, err := internal.DAO.AddObjectToContainer(params.CID, id, "{\"info\":\"Scanned @ "+d+"\"}")
 				if err != nil {
 					log.Println("error: " + err.Error())
 				}
