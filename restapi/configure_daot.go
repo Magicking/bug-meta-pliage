@@ -5,8 +5,10 @@ package restapi
 import (
 	"context"
 	"crypto/tls"
+	"log"
 	"math/big"
 	"net/http"
+	"time"
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
@@ -67,6 +69,16 @@ func configureAPI(api *operations.DAOTAPI) http.Handler {
 	api.JSONProducer = runtime.JSONProducer()
 
 	api.AssociationHandler = operations.AssociationHandlerFunc(func(params operations.AssociationParams) middleware.Responder {
+		go func() {
+			for _, id := range params.UIDS {
+				tx, err := internal.DAO.AddObjectToContainer(params.CID, id, "{\"info\":\"Scanned\"}")
+				if err != nil {
+					log.Println("error: " + err.Error())
+				}
+				log.Println(tx)
+				time.Sleep(2 * time.Second)
+			}
+		}()
 		return operations.NewAssociationOK().WithPayload(true)
 	})
 	api.HistoriqueHandler = operations.HistoriqueHandlerFunc(func(params operations.HistoriqueParams) middleware.Responder {
